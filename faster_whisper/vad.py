@@ -346,6 +346,9 @@ class SileroVADModel:
             )
             outputs.append(output)
 
+        if len(outputs) == 0:
+            return np.empty((0,), dtype=np.float32)
+
         out = np.concatenate(outputs, axis=0)
 
         return out
