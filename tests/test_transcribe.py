@@ -3,7 +3,35 @@ import os
 
 import numpy as np
 
-from faster_whisper import BatchedInferencePipeline, WhisperModel, decode_audio
+# Delay importing faster_whisper until first use to avoid importing the package
+# during pytest collection. Importing the package at module import time can
+# trigger imports of optional runtime dependencies (e.g. 'requests') that may
+# not be available in the test collection environment and cause pytest to abort.
+import importlib
+
+class _LazyAttr:
+    def __init__(self, module_name, attr_name):
+        self._module_name = module_name
+        self._attr_name = attr_name
+        self._attr = None
+
+    def _load(self):
+        if self._attr is None:
+            mod = importlib.import_module(self._module_name)
+            self._attr = getattr(mod, self._attr_name)
+
+    def __call__(self, *args, **kwargs):
+        self._load()
+        return self._attr(*args, **kwargs)
+
+    def __getattr__(self, item):
+        self._load()
+        return getattr(self._attr, item)
+
+
+BatchedInferencePipeline = _LazyAttr("faster_whisper", "BatchedInferencePipeline")
+WhisperModel = _LazyAttr("faster_whisper", "WhisperModel")
+decode_audio = _LazyAttr("faster_whisper", "decode_audio")
 
 
 def test_supported_languages():

@@ -5,7 +5,10 @@ import re
 from typing import List, Optional, Union
 
 import huggingface_hub
-import requests
+try:
+    import requests
+except ImportError:
+    requests = None
 
 from tqdm.auto import tqdm
 

@@ -19,7 +19,33 @@ from tqdm import tqdm
 from faster_whisper.audio import decode_audio, pad_or_trim
 from faster_whisper.feature_extractor import FeatureExtractor
 from faster_whisper.tokenizer import _LANGUAGE_CODES, Tokenizer
-from faster_whisper.utils import download_model, format_timestamp, get_end, get_logger
+
+
+# Defer importing faster_whisper.utils until one of its utilities is actually needed.
+# This avoids import-time failures when optional dependencies of utils (e.g. 'requests')
+# are not available in the test environment during import/pytest collection.
+def _get_utils_module():
+    from faster_whisper import utils
+
+    return utils
+
+
+def download_model(*args, **kwargs):
+    return _get_utils_module().download_model(*args, **kwargs)
+
+
+def format_timestamp(*args, **kwargs):
+    return _get_utils_module().format_timestamp(*args, **kwargs)
+
+
+def get_end(*args, **kwargs):
+    return _get_utils_module().get_end(*args, **kwargs)
+
+
+def get_logger(*args, **kwargs):
+    return _get_utils_module().get_logger(*args, **kwargs)
+
+
 from faster_whisper.vad import (
     SpeechTimestampsMap,
     VadOptions,
@@ -1781,9 +1807,9 @@ class WhisperModel:
             language_probability: Probability of the detected language.
             all_language_probs: List of tuples with all language names and probabilities.
         """
-        assert (
-            audio is not None or features is not None
-        ), "Either `audio` or `features` must be provided."
+        assert audio is not None or features is not None, (
+            "Either `audio` or `features` must be provided."
+        )
 
         if audio is not None:
             if vad_filter:

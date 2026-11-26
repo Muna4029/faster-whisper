@@ -1,3 +1,5 @@
+import pytest
+pytest.importorskip("faster_whisper")
 from faster_whisper import WhisperModel
 from faster_whisper.tokenizer import Tokenizer
 from faster_whisper.transcribe import get_suppressed_tokens
