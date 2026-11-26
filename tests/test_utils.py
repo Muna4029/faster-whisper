@@ -1,6 +1,13 @@
 import os
+import importlib
 
-from faster_whisper import available_models, download_model
+def available_models(*args, **kwargs):
+    fw = importlib.import_module("faster_whisper")
+    return fw.available_models(*args, **kwargs)
+
+def download_model(*args, **kwargs):
+    fw = importlib.import_module("faster_whisper")
+    return fw.download_model(*args, **kwargs)
 
 
 def test_available_models():

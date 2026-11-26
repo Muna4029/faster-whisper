@@ -1,6 +1,20 @@
-from faster_whisper import WhisperModel
-from faster_whisper.tokenizer import Tokenizer
-from faster_whisper.transcribe import get_suppressed_tokens
+import importlib
+
+# Lazily import faster_whisper symbols to avoid importing optional dependencies
+# (like 'requests') at pytest collection time.
+# These callables will import the real implementations only when used by a test.
+
+def WhisperModel(*args, **kwargs):
+    cls = importlib.import_module('faster_whisper').WhisperModel
+    return cls(*args, **kwargs)
+
+def Tokenizer(*args, **kwargs):
+    cls = importlib.import_module('faster_whisper.tokenizer').Tokenizer
+    return cls(*args, **kwargs)
+
+def get_suppressed_tokens(*args, **kwargs):
+    func = importlib.import_module('faster_whisper.transcribe').get_suppressed_tokens
+    return func(*args, **kwargs)
 
 
 def test_suppressed_tokens_minus_1():

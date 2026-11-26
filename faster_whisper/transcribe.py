@@ -22,7 +22,29 @@ from tqdm.asyncio import tqdm as atqdm
 from faster_whisper.audio import decode_audio, pad_or_trim
 from faster_whisper.feature_extractor import FeatureExtractor
 from faster_whisper.tokenizer import _LANGUAGE_CODES, Tokenizer
-from faster_whisper.utils import download_model, format_timestamp, get_end, get_logger
+
+# Import utils lazily and guard missing optional dependencies so that importing this
+# module does not fail when optional packages (e.g. 'requests') used by
+# faster_whisper.utils are not installed. If the utils functions are actually
+# needed at runtime, a clear error will be raised at call time.
+try:
+    from faster_whisper.utils import download_model, format_timestamp, get_end, get_logger
+except Exception as e:  # pragma: no cover - fallback for environments missing optional deps
+    _utils_import_error = e
+
+    def _raise_utils_error(*args, **kwargs):
+        raise RuntimeError(
+            "faster_whisper.utils could not be imported. "
+            "This usually means an optional dependency (for example 'requests') is not installed. "
+            "Install the required dependencies or ensure the environment provides them. "
+            f"Original error: {_utils_import_error}"
+        )
+
+    download_model = _raise_utils_error
+    format_timestamp = _raise_utils_error
+    get_end = _raise_utils_error
+    get_logger = _raise_utils_error
+
 from faster_whisper.vad import (
     SpeechTimestampsMap,
     VadOptions,
@@ -1535,7 +1557,7 @@ class WhisperModel:
         segment_size: int,
         segment_duration: float,
         seek: int,
-    ) -> List[List[int]]:
+    ) -> Tuple[List[dict], int, bool]:
         current_segments = []
         single_timestamp_ending = (
             len(tokens) >= 2 and tokens[-2] < tokenizer.timestamp_begin <= tokens[-1]
