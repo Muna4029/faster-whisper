@@ -1,6 +1,6 @@
 import os
 
-from faster_whisper import available_models, download_model
+from faster_whisper.utils import available_models, download_model
 
 
 def test_available_models():

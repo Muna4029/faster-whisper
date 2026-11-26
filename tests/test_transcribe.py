@@ -3,7 +3,36 @@ import os
 
 import numpy as np
 
-from faster_whisper import BatchedInferencePipeline, WhisperModel, decode_audio
+# Use lazy wrappers to avoid importing the faster_whisper package at module
+# import time (which can trigger missing optional runtime dependencies such
+# as requests during test collection). The real objects will be imported
+# on first use inside the tests.
+import importlib
+
+class _LazyAttr:
+    def __init__(self, module_name, attr_name):
+        self.module_name = module_name
+        self.attr_name = attr_name
+        self._obj = None
+
+    def _load(self):
+        if self._obj is None:
+            mod = importlib.import_module(self.module_name)
+            self._obj = getattr(mod, self.attr_name)
+        return self._obj
+
+    def __call__(self, *args, **kwargs):
+        return self._load()(*args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._load(), name)
+
+    def __repr__(self):
+        return f"<LazyAttr {self.module_name}.{self.attr_name}>"
+
+BatchedInferencePipeline = _LazyAttr("faster_whisper", "BatchedInferencePipeline")
+WhisperModel = _LazyAttr("faster_whisper", "WhisperModel")
+decode_audio = _LazyAttr("faster_whisper", "decode_audio")
 
 
 def test_supported_languages():

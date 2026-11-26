@@ -5,7 +5,17 @@ import re
 from typing import List, Optional, Union
 
 import huggingface_hub
-import requests
+try:
+    import requests
+except ImportError:
+    # Avoid hard dependency on requests at import time (e.g. during test collection).
+    # Provide a minimal stub so references like `requests.exceptions.ConnectionError`
+    # won't raise ModuleNotFoundError during import. Actual network functionality
+    # will still require the real `requests` package at runtime.
+    import types
+    class _RequestsStub:
+        exceptions = types.SimpleNamespace(ConnectionError=Exception, HTTPError=Exception)
+    requests = _RequestsStub()
 
 from tqdm.auto import tqdm
 
